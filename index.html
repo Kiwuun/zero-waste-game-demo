@@ -16,7 +16,7 @@
       }
 
       #volumeBox {
-        position: fixed;
+        position: absolute;
         /* padding: 30px; */
         top: 30px;
         right: 330px;
@@ -5092,12 +5092,29 @@ setImages([
           }
 
           if (timer.isPaused()) {
-            muteButton.x =
-              canvas.width / 2 -
-              originalPlayButtonSize +
-              originalPlayButtonSize / 8;
-            muteButton.y = canvas.height / 2 + originalPlayButtonSize / 2;
-            muteButton.size = originalPlayButtonSize;
+            const btnSize = originalPlayButtonSize; 
+            const gap = 15;
+            
+            const gridCX = (canvas.width / 2) - 100; 
+            
+            const gridCY = (canvas.height / 2) - 50; 
+
+            pauseButton.x = gridCX - btnSize - gap;
+            pauseButton.y = gridCY;
+            pauseButton.size = btnSize;
+
+            restartButton.x = gridCX + gap;
+            restartButton.y = gridCY;
+            restartButton.size = btnSize;
+
+            homeButton.x = gridCX - btnSize - gap;
+            homeButton.y = gridCY + btnSize + gap;
+            homeButton.size = btnSize;
+
+            muteButton.x = gridCX + gap;
+            muteButton.y = gridCY + btnSize + gap;
+            muteButton.size = btnSize;
+
             drawPauseScreen();
           } else {
             drawPauseButton();
@@ -5302,12 +5319,29 @@ setImages([
           });
 
           if (timer.isPaused()) {
-            muteButton.x =
-              canvas.width / 2 -
-              originalPlayButtonSize +
-              originalPlayButtonSize / 8;
-            muteButton.y = canvas.height / 2 + originalPlayButtonSize / 2;
-            muteButton.size = originalPlayButtonSize;
+            const btnSize = originalPlayButtonSize; 
+            const gap = 15;
+            
+            const gridCX = (canvas.width / 2) - 100; 
+            
+            const gridCY = (canvas.height / 2) - 50;
+
+            pauseButton.x = gridCX - btnSize - gap;
+            pauseButton.y = gridCY;
+            pauseButton.size = btnSize;
+
+            restartButton.x = gridCX + gap;
+            restartButton.y = gridCY;
+            restartButton.size = btnSize;
+
+            homeButton.x = gridCX - btnSize - gap;
+            homeButton.y = gridCY + btnSize + gap;
+            homeButton.size = btnSize;
+
+            muteButton.x = gridCX + gap;
+            muteButton.y = gridCY + btnSize + gap;
+            muteButton.size = btnSize;
+
             drawPauseScreen();
           } else {
             pauseButton.x =
