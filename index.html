@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -65,6 +66,9 @@
         height:100%;
         overflow:hidden;
       }
+      #helpCanvas{
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -72,7 +76,7 @@
     <!-- Original is 960px width and 640px height -->
     <canvas id="myCanvas" width="960" height="640"></canvas>
     <canvas id="helpCanvas" width="300" height="640"
-        style="background:black; color:white; position:absolute; right:0; top:0;">
+        style="background:black; color:white; position:absolute; right:0; top:0; display:none;">
     </canvas>
     <div id="altText" aria-live="polite"></div>
 
@@ -104,6 +108,8 @@
       var selectedSortableIndex = -1;
       let manualSwitching = false; 
       let selectionLocked = false;
+      let settingsMenuOpen = false;
+      var helpButtonImg = new Image();
 
       
 
@@ -304,6 +310,17 @@
         return;
       }
 
+      if (k === 'h'){
+        if (!muted) {
+          buttonSound.load();
+          buttonSound.play();
+      }
+      toggleHelpMenu();
+      return;
+      }
+
+      
+    
       if(timer.isPaused()){
         const pauseVolumeSlider = document.getElementById("pauseVolumeSlider");
         let v = Number(pauseVolumeSlider.value);
@@ -1451,9 +1468,14 @@ if (k === 't') {
       document.addEventListener("touchmove", touch2Mouse, true);
       document.addEventListener("touchend", touch2Mouse, true);
 
+      function isGameplayActive() {
+        return !timer.isPaused() && 
+          (currentState === state.PLAYSORT);
+      }
+
       // Make Alt Text div not viewable and only readable via tool
-      // document.getElementById("altText").style.position = "absolute";
-      // document.getElementById("altText").style.left = "-9999px";
+       document.getElementById("altText").style.position = "absolute";
+       document.getElementById("altText").style.left = "-9999px";
 
       var canvas = document.getElementById("myCanvas");
       var ctx = canvas.getContext("2d");
@@ -1571,6 +1593,7 @@ const IMG_VARS = [
     //const volumeSlider = document.getElementById('volumeSlider');
 
     volumeSlider.addEventListener('input', () => {
+      
       const v = Number(volumeSlider.value) / 100;
       if (v > 0 && isMuted) {
         isMuted = false;
@@ -1630,9 +1653,9 @@ const IMG_VARS = [
 
           if(!isMuted) previousVolume=v;
       });
-     // const month = new Date().getMonth(); // 0 = jan, 9 = oct
+     const month = new Date().getMonth(); // 0 = jan, 9 = oct
 
-     const month =11;  //testing
+     //const month =11;
 
       var muted = false;
 
@@ -1732,7 +1755,9 @@ setImages([
   [level3Img, "level3"],
   [restartButtonImg, "restartButton"],
   [homeButtonImg, "homeButton"],
+  [helpButtonImg, "gear"]
 ], "Buttons");
+
 
 // --- Clear match images ---
 setImages([
@@ -1851,6 +1876,7 @@ setImages([
         level3Img.alt = "Level 3 button";
         restartButtonImg.alt = "Restart level button";
         homeButtonImg.alt = "Home button";
+        helpButtonImg.alt = "Help button";
 
 
 
@@ -2057,6 +2083,13 @@ setImages([
         soundButtonSize / 8,
         soundButtonSize,
         muteImg
+      );
+
+      var helpButton = new CircularButton(
+        canvas.width - 150,
+        15, 
+        60,
+        helpButtonImg
       );
 
       var images = [];
@@ -3002,11 +3035,32 @@ setImages([
                     timer.endDelay();
                   }
       }
+      function toggleHelpMenu() {
+        const helpCanvas = document.getElementById("helpCanvas");
+        const currentDisplay = window.getComputedStyle(helpCanvas).display;
+
+
+        if (currentDisplay === "none") {
+            helpCanvas.style.display = "block";
+            drawHelpPanel();
+            updateAltText("Help menu opened.");
+        } else {
+            helpCanvas.style.display = "none";
+            updateAltText("Help menu closed.");
+        }
+      }
 
       function clickHandler(e) {
         var x = e.pageX - canvas.offsetLeft;
         var y = e.pageY - canvas.offsetTop;
-
+        if (helpButton.clicked(x, y)) {
+          if (!muted) {
+            buttonSound.load();
+            buttonSound.play();
+          }
+          toggleHelpMenu();
+          return;
+        }
         if (currentState == state.PLAYMATCH) {
           if (timer.isMatchDelayed()) {
             timer.endMatchDelay();
@@ -3807,6 +3861,7 @@ setImages([
           "ENTER – Continue / Select",
           "BACKSPACE – Go Back",
           "M – Mute / Unmute Volume",
+          "H – Open/Close Help Menu",
           "",
           "ZERO WASTE MATCHING:",
           "Arrows – Move",
@@ -4116,6 +4171,7 @@ setImages([
           muted = false;
           muteButton.image = muteImg;
         }
+
       }
 
       function drawGameBoard() {
@@ -4128,6 +4184,13 @@ setImages([
 
       function drawMatchInfo() {
         ctx.drawImage(matchInfoImage, 90, canvas.height - 115, 100, 100);
+        ctx.drawImage(
+        helpButton.image,
+        helpButton.x,
+        helpButton.y,
+        helpButton.size,
+        helpButton.size
+    );
 
         ctx.font = "20px Comic Sans MS";
         ctx.fillStyle = "#000000";
@@ -4216,6 +4279,8 @@ setImages([
       }
 
       function drawMainIntroScreen() {
+        ctx.fillStyle = "red";
+        ctx.fillRect(helpButton.x, helpButton.y, helpButton.size, helpButton.size);
         ctx.drawImage(mainIntroImg, 0, 0, canvas.width, canvas.height);
         ctx.drawImage(
           playButton.image,
@@ -4231,6 +4296,8 @@ setImages([
           muteButton.size,
           muteButton.size
         );
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
+
       }
 
       function drawWelcome1Screen() {
@@ -4249,6 +4316,8 @@ setImages([
           muteButton.size,
           muteButton.size
         );
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
+
       }
 
       function drawWelcome2Screen() {
@@ -4267,6 +4336,8 @@ setImages([
           muteButton.size,
           muteButton.size
         );
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
+
       }
 
       function drawChooseGameScreen() {
@@ -4292,6 +4363,8 @@ setImages([
           muteButton.size,
           muteButton.size
         );
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
+
       }
 
       function drawMatchingIntro1() {
@@ -4310,6 +4383,8 @@ setImages([
           muteButton.size,
           muteButton.size
         );
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
+
       }
 
       function drawMatchingIntro2() {
@@ -4328,6 +4403,8 @@ setImages([
           muteButton.size,
           muteButton.size
         );
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
+
       }
 
       function drawMatchingIntro3() {
@@ -4346,6 +4423,8 @@ setImages([
           muteButton.size,
           muteButton.size
         );
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
+
       }
 
       function drawMatchingChooseLevelScreen() {
@@ -4384,6 +4463,8 @@ setImages([
           muteButton.size,
           muteButton.size
         );
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
+
       }
 
       function drawSortingChooseLevelScreen() {
@@ -4416,6 +4497,8 @@ setImages([
           muteButton.size,
           muteButton.size
         );
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
+
       }
 
       function drawSortingIntro1() {
@@ -4434,6 +4517,8 @@ setImages([
           muteButton.size,
           muteButton.size
         );
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
+
       }
 
       function drawSortingIntro2() {
@@ -4452,6 +4537,8 @@ setImages([
           muteButton.size,
           muteButton.size
         );
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
+
       }
 
       function drawEndGameScreen() {
@@ -4506,6 +4593,8 @@ setImages([
           muteButton.size,
           muteButton.size
         );
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
+
       }
 
       function drawPauseButton() {
@@ -4594,6 +4683,18 @@ setImages([
           muteButton.y = -9999;
   }
 }
+      function toggleHelpMenu() {
+        const helpCanvas = document.getElementById("helpCanvas");
+
+        if (helpCanvas.style.display === "none") {
+            helpCanvas.style.display = "block";
+            drawHelpPanel();
+            updateAltText("Help menu opened.");
+        } else {
+            helpCanvas.style.display = "none";
+            updateAltText("Help menu closed.");
+        }
+    }
       function drawSortingGame() {
         ctx.drawImage(sortingBackgroundImg, 0, 0, canvas.width, canvas.height);
 
@@ -4799,16 +4900,16 @@ setImages([
 
       function changeChooseButtonSize() {
         if (chooseButtonSize < 250 && increaseChooseButtonSize) {
-          chooseButtonSize += 0.1; // grow rate (slow)
+          chooseButtonSize += 1;
 
-          matchingButton.x -= 0.05;
-          matchingButton.y -= 0.05;
+          matchingButton.x -= 0.5;
+          matchingButton.y -= 0.5;
 
           matchingButton.width = chooseButtonSize;
           matchingButton.height = chooseButtonSize;
 
-          sortingButton.x -= 0.05;
-          sortingButton.y -= 0.05;
+          sortingButton.x -= 0.5;
+          sortingButton.y -= 0.5;
 
           sortingButton.width = chooseButtonSize;
           sortingButton.height = chooseButtonSize;
@@ -4817,16 +4918,16 @@ setImages([
             increaseChooseButtonSize = false;
           }
         } else {
-          chooseButtonSize -= 0.1; // shrink at same speed (important!)
+          chooseButtonSize -= 1;
 
-          matchingButton.x += 0.05;
-          matchingButton.y += 0.05;
+          matchingButton.x += 0.5;
+          matchingButton.y += 0.5;
 
           matchingButton.width = chooseButtonSize;
           matchingButton.height = chooseButtonSize;
 
-          sortingButton.x += 0.05;
-          sortingButton.y += 0.05;
+          sortingButton.x += 0.5;
+          sortingButton.y += 0.5;
 
           sortingButton.width = chooseButtonSize;
           sortingButton.height = chooseButtonSize;
@@ -4837,14 +4938,12 @@ setImages([
         }
       }
 
-
-
       function changePlayButtonSize() {
         if (currentPlayButtonSize < 125 && increasePlayButtonSize) {
-          currentPlayButtonSize += 0.15; // slower
+          currentPlayButtonSize += 0.5;
 
-          playButton.x -= 0.075;
-          playButton.y -= 0.075;
+          playButton.x -= 0.25;
+          playButton.y -= 0.25;
 
           playButton.size = currentPlayButtonSize;
 
@@ -4852,10 +4951,10 @@ setImages([
             increasePlayButtonSize = false;
           }
         } else {
-          currentPlayButtonSize -= 0.15; // slower
+          currentPlayButtonSize -= 0.5;
 
-          playButton.x += 0.075;
-          playButton.y += 0.075;
+          playButton.x += 0.25;
+          playButton.y += 0.25;
 
           playButton.size = currentPlayButtonSize;
 
@@ -4865,56 +4964,59 @@ setImages([
         }
       }
 
-
       function changeLevelButtonSize() {
         if (levelButtonWidth < 150 && increaseLevelButtonSize) {
-          levelButtonWidth += 0.1; 
-          levelButtonHeight += 0.06; 
+          levelButtonWidth += 0.5;
+          levelButtonHeight += 0.2;
 
           level1Button.width = levelButtonWidth;
           level1Button.height = levelButtonHeight;
-          level1Button.x -= 0.05;
-          level1Button.y -= 0.03;
+
+          level1Button.x -= 0.25;
+          level1Button.y -= 0.1;
 
           level2Button.width = levelButtonWidth;
           level2Button.height = levelButtonHeight;
-          level2Button.x -= 0.05;
-          level2Button.y -= 0.03;
+
+          level2Button.x -= 0.25;
+          level2Button.y -= 0.1;
 
           level3Button.width = levelButtonWidth;
           level3Button.height = levelButtonHeight;
-          level3Button.x -= 0.05;
-          level3Button.y -= 0.03;
+
+          level3Button.x -= 0.25;
+          level3Button.y -= 0.1;
 
           if (levelButtonWidth >= 150) {
             increaseLevelButtonSize = false;
           }
         } else {
-          levelButtonWidth -= 0.1;     
-          levelButtonHeight -= 0.06;  
+          levelButtonWidth -= 0.5;
+          levelButtonHeight -= 0.2;
 
           level1Button.width = levelButtonWidth;
           level1Button.height = levelButtonHeight;
-          level1Button.x += 0.05;
-          level1Button.y += 0.03;
+
+          level1Button.x += 0.25;
+          level1Button.y += 0.1;
 
           level2Button.width = levelButtonWidth;
           level2Button.height = levelButtonHeight;
-          level2Button.x += 0.05;
-          level2Button.y += 0.03;
+
+          level2Button.x += 0.25;
+          level2Button.y += 0.1;
 
           level3Button.width = levelButtonWidth;
           level3Button.height = levelButtonHeight;
-          level3Button.x += 0.05;
-          level3Button.y += 0.03;
+
+          level3Button.x += 0.25;
+          level3Button.y += 0.1;
 
           if (levelButtonWidth <= 125) {
             increaseLevelButtonSize = true;
           }
         }
       }
-
-
 
       function changeRestartAndHomeButtonSize() {
         if (currentPlayButtonSize < 125 && increasePlayButtonSize) {
@@ -5223,6 +5325,13 @@ setImages([
             binWidth,
             binBackHeight
           );
+          ctx.drawImage(
+            helpButton.image,
+            helpButton.x,
+            helpButton.y,
+            helpButton.size,
+            helpButton.size
+          );
 
           if(!timer.isPaused() && garbage.length>0){
             let isSelectedValid = selectedGarbageItem && garbage.includes(selectedGarbageItem) && (selectedGarbageItem.falling || (selectedGarbageItem.y + selectedGarbageItem.size <canvas.height -binFrontHeight));
@@ -5248,10 +5357,11 @@ setImages([
           }
         }
       } 
-
+        
+        if (isGameplayActive()) {
           // Keyboard control for active falling garbage
           let activeGarbage = garbage.find(g => g.falling);
-
+        
           if (activeGarbage) {
             if (keys["ArrowLeft"]) {
             activeGarbage.moveLeft(canvas.width);
@@ -5261,7 +5371,8 @@ setImages([
             activeGarbage.moveRight(canvas.width);
             updateAltText("Moved right")
           }
-      }
+          }
+        }
 
           if (!timer.isPaused() && !timerFreeze) {
             percent = (timer.getRunTime() - tFrozenAccum) / timer.getTimerTime();
@@ -5460,7 +5571,7 @@ setImages([
 
           changeRestartAndHomeButtonSize();
         }
-
+        ctx.drawImage(helpButton.image, helpButton.x, helpButton.y, helpButton.size, helpButton.size);
         requestAnimationFrame(draw);
       }
       loadAssets();
